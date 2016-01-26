@@ -136,7 +136,7 @@ func (this *CachedSchemaRegistryClient) Register(subject string, schema avro.Sch
 
 	if this.isOK(response) {
 		decodedResponse := &RegisterSchemaResponse{}
-		if this.handleSuccess(response, decodedResponse) != nil {
+		if err := this.handleSuccess(response, decodedResponse); err != nil {
 			return 0, err
 		}
 
@@ -167,7 +167,7 @@ func (this *CachedSchemaRegistryClient) GetByID(id int32) (avro.Schema, error) {
 
 	if this.isOK(response) {
 		decodedResponse := &GetSchemaResponse{}
-		if this.handleSuccess(response, decodedResponse) != nil {
+		if err := this.handleSuccess(response, decodedResponse); err != nil {
 			return nil, err
 		}
 		schema, err := avro.ParseSchema(decodedResponse.Schema)
@@ -191,7 +191,7 @@ func (this *CachedSchemaRegistryClient) GetLatestSchemaMetadata(subject string) 
 
 	if this.isOK(response) {
 		decodedResponse := &GetSubjectVersionResponse{}
-		if this.handleSuccess(response, decodedResponse) != nil {
+		if err := this.handleSuccess(response, decodedResponse); err != nil {
 			return nil, err
 		}
 
@@ -224,7 +224,7 @@ func (this *CachedSchemaRegistryClient) GetVersion(subject string, schema avro.S
 
 	if this.isOK(response) {
 		decodedResponse := &GetSubjectVersionResponse{}
-		if this.handleSuccess(response, decodedResponse) != nil {
+		if err := this.handleSuccess(response, decodedResponse); err != nil {
 			return 0, err
 		}
 		schemaVersionMap[schema] = decodedResponse.Version

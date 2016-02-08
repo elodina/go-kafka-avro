@@ -25,6 +25,7 @@ import (
 	"strings"
 
 	avro "github.com/elodina/go-avro"
+	"sync"
 )
 
 const (
@@ -102,6 +103,7 @@ type CachedSchemaRegistryClient struct {
 	schemaCache  map[string]map[avro.Schema]int32
 	idCache      map[int32]avro.Schema
 	versionCache map[string]map[avro.Schema]int32
+	lock         sync.RWMutex
 }
 
 func NewCachedSchemaRegistryClient(registryURL string) *CachedSchemaRegistryClient {
@@ -116,14 +118,21 @@ func NewCachedSchemaRegistryClient(registryURL string) *CachedSchemaRegistryClie
 func (this *CachedSchemaRegistryClient) Register(subject string, schema avro.Schema) (int32, error) {
 	var schemaIdMap map[avro.Schema]int32
 	var exists bool
+
+	this.lock.RLock()
+	if schemaIdMap, exists = this.schemaCache[subject]; exists {
+		var id int32
+		if id, exists = schemaIdMap[schema]; exists {
+			return id, nil
+		}
+	}
+	this.lock.RUnlock()
+
+	this.lock.Lock()
+	defer this.lock.Unlock()
 	if schemaIdMap, exists = this.schemaCache[subject]; !exists {
 		schemaIdMap = make(map[avro.Schema]int32)
 		this.schemaCache[subject] = schemaIdMap
-	}
-
-	var id int32
-	if id, exists = schemaIdMap[schema]; exists {
-		return id, nil
 	}
 
 	request, err := this.newDefaultRequest("POST",

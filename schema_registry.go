@@ -103,15 +103,21 @@ type CachedSchemaRegistryClient struct {
 	schemaCache  map[string]map[avro.Schema]int32
 	idCache      map[int32]avro.Schema
 	versionCache map[string]map[avro.Schema]int32
+	key          string
 	lock         sync.RWMutex
 }
 
 func NewCachedSchemaRegistryClient(registryURL string) *CachedSchemaRegistryClient {
+	return NewCachedSchemaRegistryClientAuth(registryURL, "")
+}
+
+func NewCachedSchemaRegistryClientAuth(registryURL string, key string) *CachedSchemaRegistryClient {
 	return &CachedSchemaRegistryClient{
 		registryURL:  registryURL,
 		schemaCache:  make(map[string]map[avro.Schema]int32),
 		idCache:      make(map[int32]avro.Schema),
 		versionCache: make(map[string]map[avro.Schema]int32),
+		key:          key,
 	}
 }
 
@@ -252,6 +258,9 @@ func (this *CachedSchemaRegistryClient) newDefaultRequest(method string, uri str
 	}
 	request.Header.Set("Accept", SCHEMA_REGISTRY_V1_JSON)
 	request.Header.Set("Content-Type", SCHEMA_REGISTRY_V1_JSON)
+	if this.key != "" {
+		request.Header.Set("X-Api-Key", this.key)
+	}
 	return request, nil
 }
 

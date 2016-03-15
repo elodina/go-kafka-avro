@@ -31,6 +31,10 @@ type KafkaAvroEncoder struct {
 }
 
 func NewKafkaAvroEncoder(url string) *KafkaAvroEncoder {
+	return NewKafkaAvroEncoderAuth(url, "")
+}
+
+func NewKafkaAvroEncoderAuth(url string, key string) *KafkaAvroEncoder {
 	primitiveSchemas := make(map[string]avro.Schema)
 	primitiveSchemas["Null"] = createPrimitiveSchema("null")
 	primitiveSchemas["Boolean"] = createPrimitiveSchema("boolean")
@@ -42,7 +46,7 @@ func NewKafkaAvroEncoder(url string) *KafkaAvroEncoder {
 	primitiveSchemas["Bytes"] = createPrimitiveSchema("bytes")
 
 	return &KafkaAvroEncoder{
-		schemaRegistry:   NewCachedSchemaRegistryClient(url),
+		schemaRegistry:   NewCachedSchemaRegistryClientAuth(url, key),
 		primitiveSchemas: primitiveSchemas,
 	}
 }
@@ -119,8 +123,12 @@ type KafkaAvroDecoder struct {
 }
 
 func NewKafkaAvroDecoder(url string) *KafkaAvroDecoder {
+	return NewKafkaAvroDecoderAuth(url, "")
+}
+
+func NewKafkaAvroDecoderAuth(url string, key string) *KafkaAvroDecoder {
 	return &KafkaAvroDecoder{
-		schemaRegistry: NewCachedSchemaRegistryClient(url),
+		schemaRegistry: NewCachedSchemaRegistryClientAuth(url, key),
 	}
 }
 

@@ -103,21 +103,21 @@ type CachedSchemaRegistryClient struct {
 	schemaCache  map[string]map[avro.Schema]int32
 	idCache      map[int32]avro.Schema
 	versionCache map[string]map[avro.Schema]int32
-	key          string
+	auth         *KafkaAvroAuth
 	lock         sync.RWMutex
 }
 
 func NewCachedSchemaRegistryClient(registryURL string) *CachedSchemaRegistryClient {
-	return NewCachedSchemaRegistryClientAuth(registryURL, "")
+	return NewCachedSchemaRegistryClientAuth(registryURL, nil)
 }
 
-func NewCachedSchemaRegistryClientAuth(registryURL string, key string) *CachedSchemaRegistryClient {
+func NewCachedSchemaRegistryClientAuth(registryURL string, auth *KafkaAvroAuth) *CachedSchemaRegistryClient {
 	return &CachedSchemaRegistryClient{
 		registryURL:  registryURL,
 		schemaCache:  make(map[string]map[avro.Schema]int32),
 		idCache:      make(map[int32]avro.Schema),
 		versionCache: make(map[string]map[avro.Schema]int32),
-		key:          key,
+		auth:         auth,
 	}
 }
 
@@ -258,8 +258,9 @@ func (this *CachedSchemaRegistryClient) newDefaultRequest(method string, uri str
 	}
 	request.Header.Set("Accept", SCHEMA_REGISTRY_V1_JSON)
 	request.Header.Set("Content-Type", SCHEMA_REGISTRY_V1_JSON)
-	if this.key != "" {
-		request.Header.Set("X-Api-Key", this.key)
+	if this.auth != nil {
+		request.Header.Set("X-Api-User", this.auth.User)
+		request.Header.Set("X-Api-Key", this.auth.Key)
 	}
 	return request, nil
 }

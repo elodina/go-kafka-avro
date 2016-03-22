@@ -156,7 +156,9 @@ func (this *CachedSchemaRegistryClient) Register(subject string, schema avro.Sch
 		}
 
 		schemaIdMap[schema] = decodedResponse.Id
+		this.lock.RLock()
 		this.idCache[decodedResponse.Id] = schema
+		this.lock.RUnlock()
 
 		return decodedResponse.Id, err
 	} else {
@@ -167,9 +169,12 @@ func (this *CachedSchemaRegistryClient) Register(subject string, schema avro.Sch
 func (this *CachedSchemaRegistryClient) GetByID(id int32) (avro.Schema, error) {
 	var schema avro.Schema
 	var exists bool
+	this.lock.RLock()
 	if schema, exists = this.idCache[id]; exists {
+		this.lock.RUnlock()
 		return schema, nil
 	}
+	this.lock.RUnlock()
 
 	request, err := this.newDefaultRequest("GET", fmt.Sprintf(GET_SCHEMA_BY_ID, id), nil)
 	if err != nil {
@@ -186,7 +191,9 @@ func (this *CachedSchemaRegistryClient) GetByID(id int32) (avro.Schema, error) {
 			return nil, err
 		}
 		schema, err := avro.ParseSchema(decodedResponse.Schema)
+		this.lock.Lock()
 		this.idCache[id] = schema
+		this.lock.Unlock()
 
 		return schema, err
 	} else {

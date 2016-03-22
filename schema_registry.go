@@ -156,9 +156,7 @@ func (this *CachedSchemaRegistryClient) Register(subject string, schema avro.Sch
 		}
 
 		schemaIdMap[schema] = decodedResponse.Id
-		this.lock.RLock()
 		this.idCache[decodedResponse.Id] = schema
-		this.lock.RUnlock()
 
 		return decodedResponse.Id, err
 	} else {

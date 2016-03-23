@@ -127,12 +127,14 @@ func (this *CachedSchemaRegistryClient) Register(subject string, schema avro.Sch
 
 	this.lock.RLock()
 	if schemaIdMap, exists = this.schemaCache[subject]; exists {
+		this.lock.RUnlock()
 		var id int32
 		if id, exists = schemaIdMap[schema]; exists {
 			return id, nil
 		}
+	} else {
+		this.lock.RUnlock()
 	}
-	this.lock.RUnlock()
 
 	this.lock.Lock()
 	defer this.lock.Unlock()

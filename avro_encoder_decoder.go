@@ -76,10 +76,16 @@ func (this *KafkaAvroEncoder) Encode(obj interface{}) ([]byte, error) {
 	}
 
 	buffer := &bytes.Buffer{}
-	buffer.Write(magic_bytes)
+	_, err = buffer.Write(magic_bytes)
+	if err != nil {
+		return nil, err
+	}
 	idSlice := make([]byte, 4)
 	binary.BigEndian.PutUint32(idSlice, uint32(id))
-	buffer.Write(idSlice)
+	_, err = buffer.Write(idSlice)
+	if err != nil {
+		return nil, err
+	}
 
 	enc := avro.NewBinaryEncoder(buffer)
 	var writer avro.DatumWriter
@@ -89,7 +95,10 @@ func (this *KafkaAvroEncoder) Encode(obj interface{}) ([]byte, error) {
 		writer = avro.NewSpecificDatumWriter()
 	}
 	writer.SetSchema(schema)
-	writer.Write(obj, enc)
+	err = writer.Write(obj, enc)
+	if err != nil {
+		return nil, err
+	}
 
 	return buffer.Bytes(), nil
 }
